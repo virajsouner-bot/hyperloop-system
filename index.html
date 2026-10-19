@@ -1,0 +1,634 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#080d18">
+<title>Hyperloop Control | Mission Dashboard</title>
+
+<style>
+:root {
+  --bg:#080d18;--panel:#111b2b;--panel2:#0b1422;--border:#26364c;
+  --text:#edf5ff;--muted:#91a1b8;--cyan:#43e5f5;
+  --green:#49e3a1;--amber:#ffbf69;--red:#ff647c;--blue:#7a9cff;
+}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(ellipse at 15% 0%,#12283e,transparent 42%),var(--bg);color:var(--text);font-family:Inter,system-ui,Arial,sans-serif}
+button,input{font:inherit}
+button{cursor:pointer}
+.app{max-width:1450px;margin:auto;padding:24px}
+header,.hero,.panel-head,.metric-top,.progress-label,footer{display:flex;justify-content:space-between;align-items:center;gap:14px}
+header{padding-bottom:22px;border-bottom:1px solid var(--border)}
+.brand{display:flex;align-items:center;gap:12px}
+.logo{width:45px;height:45px;display:grid;place-items:center;background:#102b3a;border:1px solid #286476;border-radius:13px;color:var(--cyan);font-size:25px}
+h1{font-size:19px;margin:0 0 5px}
+h2{font-size:16px;margin:0 0 5px}
+h3{font-size:13px;margin:0 0 7px}
+p{margin:0}
+.sub,.muted{color:var(--muted);font-size:12px}
+.online{color:var(--green);font-size:11px;font-weight:800}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--green);margin-right:7px}
+.hero{padding:27px 0 20px;flex-wrap:wrap}
+.eyebrow{font-size:10px;color:var(--cyan);font-weight:800;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px}
+.hero h2{font-size:clamp(24px,3vw,32px);letter-spacing:-1px}
+.hero p{font-size:12px;color:var(--muted);margin-top:7px}
+.pill{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border);border-radius:30px;padding:8px 11px;background:#111d2e;color:var(--muted);font-size:10px;font-weight:800;white-space:nowrap}
+.good{color:var(--green);border-color:#235541;background:#10251f}
+.warn{color:var(--amber);border-color:#725329;background:#2a2115}
+.bad{color:var(--red);border-color:#6c2b3a;background:#29151d}
+.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:16px}
+.metric,.panel{min-width:0;background:linear-gradient(145deg,#121d2e,#0c1421);border:1px solid var(--border);border-radius:15px}
+.metric{padding:19px}
+.metric-label{color:var(--muted);font-size:10px;font-weight:800;letter-spacing:.7px;text-transform:uppercase}
+.metric-value{font-size:clamp(24px,3vw,33px);font-weight:800;letter-spacing:-1px;margin:12px 0 5px;font-variant-numeric:tabular-nums}
+.metric-value small{font-size:12px;color:var(--muted);font-weight:500;letter-spacing:0}
+.metric-note{font-size:10px;color:var(--muted)}
+.layout,.lower{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(280px,.9fr);gap:16px;margin-bottom:16px}
+.panel{padding:20px}
+.panel-head{margin-bottom:18px;align-items:flex-start}
+.panel-head p{color:var(--muted);font-size:11px;margin-top:5px}
+.track{height:155px;position:relative;overflow:hidden;border:1px solid var(--border);border-radius:11px;background:linear-gradient(#172338 1px,transparent 1px),linear-gradient(90deg,#172338 1px,transparent 1px),#0a1320;background-size:25px 25px}
+.rail{position:absolute;left:0;right:0;top:66px;height:28px;border-top:2px solid #38516a;border-bottom:2px solid #38516a}
+.track-glow{position:absolute;top:77px;left:0;width:100%;height:5px;background:#43e5f51c}
+.track-progress{position:absolute;top:77px;left:0;width:0;height:5px;background:linear-gradient(90deg,var(--cyan),var(--blue));box-shadow:0 0 15px #43e5f580}
+.pod{position:absolute;top:47px;left:0;transform:translateX(-50%);z-index:2}
+.pod-label{position:absolute;top:-17px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:800;color:var(--cyan)}
+.pod-icon{width:45px;height:27px;border:2px solid var(--cyan);border-radius:50% 45% 45% 50%;background:linear-gradient(135deg,#1b5063,#102a3b);box-shadow:0 0 20px #43e5f550;position:relative}
+.pod-icon:after{content:"";position:absolute;right:5px;top:5px;width:17px;height:7px;border-radius:50%;background:#91f5ff}
+.destination{position:absolute;right:9px;top:50px;text-align:center;color:var(--green);font-size:9px;font-weight:800}
+.destination:before{content:"";display:block;height:35px;width:3px;background:var(--green);margin:0 auto 4px}
+.track-labels{display:flex;justify-content:space-between;gap:10px;color:var(--muted);font-size:10px;margin-top:10px}
+.progress-wrap{margin:19px 0}
+.progress-label{font-size:11px;margin-bottom:8px}
+.progress-label span:last-child{color:var(--cyan);font-weight:800}
+.progress{height:6px;background:#243248;border-radius:20px;overflow:hidden}
+.progress>div{height:100%;width:0;background:linear-gradient(90deg,var(--cyan),var(--blue));transition:width .1s linear}
+.controls{display:flex;flex-wrap:wrap;gap:8px}
+.btn{border:1px solid var(--border);border-radius:8px;padding:10px 13px;background:#182438;color:var(--text);font-size:11px;font-weight:750}
+.btn:hover:not(:disabled){border-color:var(--cyan)}
+.btn.primary{background:var(--cyan);border-color:var(--cyan);color:#07131c}
+.btn.danger{color:var(--red);background:#29151d;border-color:#6c2b3a}
+.btn.warning{color:var(--amber);background:#2a2115;border-color:#725329}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.safety{display:flex;align-items:flex-start;gap:12px;padding:15px;border-radius:11px;border:1px solid #235541;background:#10251f;margin-bottom:16px}
+.safety.warning{border-color:#725329;background:#2a2115}
+.safety.critical{border-color:#6c2b3a;background:#29151d}
+.safety-icon{font-size:23px}
+.safety p{font-size:11px;color:#b2c0d1;line-height:1.6}
+.sensor-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sensor{padding:12px;border:1px solid var(--border);border-radius:9px;background:var(--panel2)}
+.sensor-label{font-size:10px;color:var(--muted);margin-bottom:8px}
+.sensor-value{font-size:16px;font-weight:800;font-variant-numeric:tabular-nums}
+.sensor-value small{font-size:10px;color:var(--muted);font-weight:500}
+.sensor-footer{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:13px}
+.settings{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+label{display:block;color:var(--muted);font-size:11px;margin-bottom:7px}
+input{width:100%;padding:11px;border:1px solid var(--border);border-radius:8px;background:#0a1320;color:var(--text);outline:none}
+input:focus{border-color:var(--cyan)}
+.hint{font-size:10px;color:var(--muted);margin-top:7px;line-height:1.5}
+canvas{width:100%;height:225px;display:block}
+.table-panel{margin-bottom:16px}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;text-align:left;font-size:11px}
+th{padding:12px 10px;background:#0c1422;color:var(--muted);font-size:9px;letter-spacing:.7px;text-transform:uppercase;border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:12px 10px;border-bottom:1px solid #202d40;white-space:nowrap}
+tbody tr:last-child td{border-bottom:0}
+.empty{text-align:center;color:var(--muted);padding:24px}
+.tag{display:inline-block;padding:4px 7px;border-radius:5px;background:#10251f;color:var(--green);font-size:9px;font-weight:800}
+.tag.warning{background:#2a2115;color:var(--amber)}
+.tag.critical{background:#29151d;color:var(--red)}
+.event-log{display:flex;flex-direction:column;gap:10px;max-height:220px;overflow:auto}
+.event{display:grid;grid-template-columns:70px 8px minmax(0,1fr);gap:10px;font-size:11px;line-height:1.5;color:#c7d2e1}
+.event-time{color:var(--muted)}
+.event-dot{width:7px;height:7px;border-radius:50%;background:var(--cyan);margin-top:5px}
+.event-dot.warning{background:var(--amber)}
+.event-dot.critical{background:var(--red)}
+.disclaimer{border:1px solid var(--border);border-radius:8px;padding:11px;color:var(--muted);font-size:10px;line-height:1.6;margin-top:13px}
+footer{padding:18px 2px 5px;color:var(--muted);font-size:10px;flex-wrap:wrap}
+@media(max-width:900px){.layout,.lower{grid-template-columns:1fr}}
+@media(max-width:600px){.app{padding:13px}.metrics{grid-template-columns:1fr 1fr;gap:9px}.metric{padding:13px}.panel{padding:14px}.settings{grid-template-columns:1fr}.controls .btn{flex:1 1 auto}}
+</style>
+</head>
+
+<body>
+<div class="app">
+<header>
+  <div class="brand"><div class="logo">⌁</div><div><h1>HYPERLOOP CONTROL</h1><div class="sub">Mission monitoring and safety systems</div></div></div>
+  <div class="online"><span class="dot" id="healthDot"></span><span id="systemStatus">SYSTEM ONLINE</span></div>
+</header>
+
+<section class="hero">
+  <div><div class="eyebrow">Mission control / simulation 01</div><h2>Pod trajectory dashboard</h2><p>Live simulated telemetry, automatic braking and anomaly monitoring.</p></div>
+  <span class="pill good" id="missionStatus">READY FOR DEPARTURE</span>
+</section>
+
+<section class="metrics">
+  <div class="metric"><div class="metric-label">Pod velocity</div><div class="metric-value" id="speedValue">0.0 <small>m/s</small></div><div class="metric-note" id="speedNote">0 km/h</div></div>
+  <div class="metric"><div class="metric-label">Current position</div><div class="metric-value" id="positionValue">0.0 <small>m</small></div><div class="metric-note">Distance from departure</div></div>
+  <div class="metric"><div class="metric-label">Distance remaining</div><div class="metric-value" id="remainingValue">1000.0 <small>m</small></div><div class="metric-note">Distance to destination</div></div>
+  <div class="metric"><div class="metric-label">Stopping distance</div><div class="metric-value" id="stoppingValue">0.0 <small>m</small></div><div class="metric-note">Calculated braking distance</div></div>
+</section>
+
+<section class="layout">
+  <div class="panel">
+    <div class="panel-head"><div><h2>Trajectory monitoring</h2><p>Pod position along the configured route</p></div><span class="pill" id="trackTag">STANDBY</span></div>
+    <div class="track">
+      <div class="rail"></div><div class="track-glow"></div><div class="track-progress" id="trackProgress"></div>
+      <div class="pod" id="podMarker"><div class="pod-label">POD-01</div><div class="pod-icon"></div></div>
+      <div class="destination">DESTINATION</div>
+    </div>
+    <div class="track-labels"><span>DEPARTURE · 0 m</span><span id="routeEndLabel">DESTINATION · 1000 m</span></div>
+    <div class="progress-wrap"><div class="progress-label"><span>Journey completion</span><span id="progressValue">0.0%</span></div><div class="progress"><div id="journeyProgress"></div></div></div>
+    <div class="controls">
+      <button class="btn primary" id="startButton">▶ Start mission</button>
+      <button class="btn" id="pauseButton" disabled>Ⅱ Pause</button>
+      <button class="btn" id="resetButton">↻ Reset</button>
+      <button class="btn danger" id="faultButton">⚠ Simulate fault</button>
+      <button class="btn warning" id="anomalyButton">+ Inject anomaly</button>
+    </div>
+    <div class="disclaimer">Educational simulation only. Not connected to real transport hardware or a safety-certified control system.</div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><div><h2>Safety monitor</h2><p>System condition and sensor status</p></div><span class="pill good" id="safetyTag">NORMAL</span></div>
+    <div class="safety" id="safetyBanner"><div class="safety-icon" id="safetyIcon">✓</div><div><h3 id="safetyTitle">All systems nominal</h3><p id="safetyMessage">The system is ready for a mission.</p></div></div>
+    <div class="sensor-grid">
+      <div class="sensor"><div class="sensor-label">Sensor position</div><div class="sensor-value" id="sensorPosition">0.0 <small>m</small></div></div>
+      <div class="sensor"><div class="sensor-label">Sensor velocity</div><div class="sensor-value" id="sensorSpeed">0.0 <small>m/s</small></div></div>
+      <div class="sensor"><div class="sensor-label">Sensor health</div><div class="sensor-value" id="sensorHealth">100 <small>%</small></div></div>
+      <div class="sensor"><div class="sensor-label">Braking status</div><div class="sensor-value" id="sensorBraking">INACTIVE</div></div>
+    </div>
+    <div class="sensor-footer"><span class="muted">Telemetry connection</span><span class="pill good" id="sensorHealthTag">CONNECTED</span></div>
+  </div>
+</section>
+
+<section class="lower">
+  <div class="panel">
+    <div class="panel-head"><div><h2>Velocity profile</h2><p>Recent speed measurements over simulation time</p></div><span class="pill" id="chartStatus">LIVE CHART</span></div>
+    <canvas id="velocityChart" aria-label="Velocity over time chart"></canvas>
+  </div>
+  <div class="panel">
+    <div class="panel-head"><div><h2>Mission parameters</h2><p>Configure route and maximum speed</p></div><span class="pill">CONFIG</span></div>
+    <div class="settings">
+      <div><label for="routeLengthInput">Route length (metres)</label><input id="routeLengthInput" type="number" min="100" max="100000" step="100" value="1000"><div class="hint">Allowed: 100–100,000 m</div></div>
+      <div><label for="speedLimitInput">Speed limit (m/s)</label><input id="speedLimitInput" type="number" min="1" max="150" step="1" value="30"><div class="hint">Allowed: 1–150 m/s</div></div>
+    </div>
+    <button class="btn primary" id="applySettingsButton" style="margin-top:18px;width:100%">Apply configuration</button>
+    <div class="disclaimer">Maximum simulated acceleration: 3 m/s². Maximum braking deceleration: 6 m/s².</div>
+  </div>
+</section>
+
+<section class="panel table-panel">
+  <div class="panel-head"><div><h2>Anomaly monitor</h2><p>Detected events and corrective responses</p></div><div style="display:flex;gap:8px;flex-wrap:wrap"><span class="pill" id="anomalyCount">0 EVENTS</span><span class="pill bad" id="criticalCount">0 CRITICAL</span></div></div>
+  <div class="muted" id="latestAnomaly" style="margin-bottom:13px">No anomalies detected.</div>
+  <div class="table-wrap"><table><thead><tr><th>Time</th><th>Sensor</th><th>Issue</th><th>Severity</th><th>Response</th></tr></thead><tbody id="anomalyTableBody"></tbody></table></div>
+</section>
+
+<section class="panel table-panel">
+  <div class="panel-head"><div><h2>Sensor data history</h2><p>Recorded telemetry from this mission</p></div><div style="display:flex;gap:7px;flex-wrap:wrap"><button class="btn" id="exportButton">↓ Export CSV</button><button class="btn" id="clearSensorButton">Clear history</button></div></div>
+  <div class="table-wrap"><table><thead><tr><th>Time (s)</th><th>Position (m)</th><th>Speed (m/s)</th><th>Remaining (m)</th><th>Stopping (m)</th><th>Health (%)</th><th>Braking</th></tr></thead><tbody id="sensorDataBody"></tbody></table></div>
+</section>
+
+<section class="panel">
+  <div class="panel-head"><div><h2>Mission event log</h2><p>Timestamped simulation events</p></div><button class="btn" id="clearLogButton">Clear log</button></div>
+  <div class="event-log" id="eventLog"></div>
+</section>
+<footer><span>HYPERLOOP CONTROL · EDUCATIONAL SIMULATION</span><span>Simulation clock: <strong id="clockValue">00:00.0</strong></span></footer>
+</div>
+
+<script>
+(() => {
+"use strict";
+
+const $ = id => {
+  const el = document.getElementById(id);
+  if (!el) throw new Error("Missing required element: " + id);
+  return el;
+};
+
+const ACCEL = 3;
+const BRAKE = 6;
+const SAMPLE_INTERVAL = 0.5;
+const MAX_SAMPLES = 5000;
+
+let routeLength = 1000, speedLimit = 30;
+let position = 0, speed = 0, elapsed = 0;
+let running = false, braking = false, emergencyStop = false;
+let sensorFault = false, completed = false;
+let lastFrame = null, accumulator = 0, lastRender = 0;
+let samples = [], history = [], anomalies = [], events = [];
+
+const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+const remaining = () => Math.max(0, routeLength - position);
+const stoppingDistance = v => v * v / (2 * BRAKE);
+const fmt = (v, digits=1) => Number(v).toLocaleString("en-US", {
+  minimumFractionDigits: digits, maximumFractionDigits: digits
+});
+
+function clock(t=elapsed) {
+  const m = Math.floor(t/60), s = t%60;
+  return String(m).padStart(2,"0")+":"+s.toFixed(1).padStart(4,"0");
+}
+
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, c => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  })[c]);
+}
+
+function event(message, type="normal") {
+  events.unshift({time:elapsed,message,type});
+  events = events.slice(0,250);
+  renderEvents();
+}
+
+function anomaly(sensor, issue, severity, response) {
+  anomalies.unshift({time:elapsed,sensor,issue,severity,response});
+  anomalies = anomalies.slice(0,500);
+  renderAnomalies();
+  event(severity+": "+issue+" — "+response, severity==="CRITICAL"?"critical":"warning");
+}
+
+function renderEvents() {
+  $("eventLog").innerHTML = events.length ? events.map(e => `
+    <div class="event">
+      <span class="event-time">${clock(e.time)}</span>
+      <span class="event-dot ${e.type==="critical"?"critical":e.type==="warning"?"warning":""}"></span>
+      <span>${esc(e.message)}</span>
+    </div>`).join("") : '<div class="empty">No events recorded.</div>';
+}
+
+function renderAnomalies() {
+  $("anomalyCount").textContent = anomalies.length+" EVENTS";
+  $("criticalCount").textContent = anomalies.filter(a=>a.severity==="CRITICAL").length+" CRITICAL";
+  $("latestAnomaly").textContent = anomalies.length
+    ? "Latest: "+anomalies[0].issue+" · "+anomalies[0].response
+    : "No anomalies detected.";
+
+  $("anomalyTableBody").innerHTML = anomalies.length ? anomalies.slice(0,20).map(a => `
+    <tr><td>${clock(a.time)}</td><td>${esc(a.sensor)}</td><td>${esc(a.issue)}</td>
+    <td><span class="tag ${a.severity.toLowerCase()}">${a.severity}</span></td>
+    <td>${esc(a.response)}</td></tr>`).join("")
+    : '<tr><td colspan="5" class="empty">No anomaly records yet.</td></tr>';
+}
+
+function renderSamples() {
+  $("sensorDataBody").innerHTML = samples.length ? samples.slice(-20).reverse().map(s => `
+    <tr><td>${fmt(s.time)}</td><td>${fmt(s.position)}</td><td>${fmt(s.speed)}</td>
+    <td>${fmt(s.remaining)}</td><td>${fmt(s.stopping)}</td><td>${s.health}</td>
+    <td><span class="tag ${s.braking?"warning":""}">${s.braking?"ACTIVE":"OFF"}</span></td></tr>`).join("")
+    : '<tr><td colspan="7" class="empty">No sensor samples yet.</td></tr>';
+}
+
+function capture() {
+  samples.push({
+    time:elapsed,position,speed,remaining:remaining(),
+    stopping:stoppingDistance(speed),health:sensorFault?0:100,braking
+  });
+  if(samples.length>MAX_SAMPLES) samples.shift();
+  history.push({time:elapsed,speed});
+  if(history.length>180) history.shift();
+  renderSamples();
+  drawChart();
+}
+
+function renderSafety() {
+  const critical = emergencyStop || sensorFault;
+  const state = critical ? "critical" : braking ? "warning" : "normal";
+  const banner = $("safetyBanner");
+  banner.className = "safety "+(state==="normal"?"":state);
+
+  $("safetyIcon").textContent = critical ? "⛔" : braking ? "!" : "✓";
+  $("safetyTitle").textContent = critical ? "Emergency stop / sensor fault" : braking ? "Automatic braking active" : "All systems nominal";
+  $("safetyMessage").textContent = critical
+    ? "A simulated fault is active. Motion is inhibited until the simulation is reset."
+    : braking ? "The pod is decelerating as it approaches the destination."
+    : completed ? "Destination reached. The pod is stopped."
+    : "No active faults. Monitoring is enabled.";
+
+  $("safetyTag").textContent = state.toUpperCase();
+  $("safetyTag").className = "pill "+(state==="normal"?"good":state==="warning"?"warn":"bad");
+  $("healthDot").style.background = critical ? "var(--red)" : braking ? "var(--amber)" : "var(--green)";
+  $("systemStatus").textContent = critical ? "SAFETY LOCKOUT" : braking ? "BRAKING ACTIVE" : "SYSTEM ONLINE";
+  $("sensorHealth").innerHTML = (sensorFault?0:100)+' <small>%</small>';
+  $("sensorHealthTag").textContent = sensorFault ? "FAULT" : "CONNECTED";
+  $("sensorHealthTag").className = "pill "+(sensorFault?"bad":"good");
+  $("sensorBraking").textContent = emergencyStop ? "E-STOP" : braking ? "ACTIVE" : "INACTIVE";
+  $("sensorBraking").style.color = critical ? "var(--red)" : braking ? "var(--amber)" : "var(--green)";
+}
+
+function render() {
+  const rem = remaining();
+  const progress = clamp(position/routeLength*100,0,100);
+
+  $("speedValue").innerHTML = fmt(speed)+' <small>m/s</small>';
+  $("speedNote").textContent = fmt(speed*3.6)+" km/h";
+  $("positionValue").innerHTML = fmt(position)+' <small>m</small>';
+  $("remainingValue").innerHTML = fmt(rem)+' <small>m</small>';
+  $("stoppingValue").innerHTML = fmt(stoppingDistance(speed))+' <small>m</small>';
+  $("sensorPosition").innerHTML = fmt(position)+' <small>m</small>';
+  $("sensorSpeed").innerHTML = fmt(speed)+' <small>m/s</small>';
+  $("progressValue").textContent = fmt(progress)+"%";
+  $("journeyProgress").style.width = progress+"%";
+  $("trackProgress").style.width = progress+"%";
+  $("podMarker").style.left = clamp(progress,1,99)+"%";
+  $("routeEndLabel").textContent = "DESTINATION · "+fmt(routeLength,0)+" m";
+  $("clockValue").textContent = clock();
+
+  const state = emergencyStop || sensorFault ? "FAULT" : completed ? "COMPLETED" : braking ? "BRAKING" : running ? "IN TRANSIT" : position>0 ? "PAUSED" : "STANDBY";
+  $("trackTag").textContent = state;
+  $("trackTag").className = "pill "+(emergencyStop||sensorFault?"bad":braking?"warn":completed?"good":"");
+  $("missionStatus").textContent = emergencyStop||sensorFault ? "SAFETY LOCKOUT" : completed ? "MISSION COMPLETED" : running ? (braking?"AUTOMATIC BRAKING":"MISSION IN PROGRESS") : position>0 ? "MISSION PAUSED" : "READY FOR DEPARTURE";
+  $("missionStatus").className = "pill "+(emergencyStop||sensorFault?"bad":braking?"warn":completed?"good":"");
+
+  $("startButton").disabled = running || completed || emergencyStop || sensorFault;
+  $("pauseButton").disabled = !running;
+  $("applySettingsButton").disabled = running;
+  $("routeLengthInput").disabled = running;
+  $("speedLimitInput").disabled = running;
+  renderSafety();
+}
+
+// Braking-envelope controller with constant-deceleration kinematics.
+// When the predicted stopping point enters the remaining route, the
+// controller brakes. The final tiny residual is clamped to the destination.
+function step(dt) {
+  if(!running || emergencyStop || sensorFault || completed) return;
+
+  const rem = remaining();
+  const stopD = stoppingDistance(speed);
+  const safetyMargin = speed*dt + 0.5*BRAKE*dt*dt;
+
+  braking = speed > 0 && rem <= stopD + safetyMargin;
+
+  const v0 = speed;
+  let acceleration = braking ? -BRAKE : ACCEL;
+
+  // Choose acceleration using the stopping-speed envelope.
+  const safeSpeed = Math.sqrt(Math.max(0, 2*BRAKE*rem));
+  if(v0 > safeSpeed) {
+    braking = true;
+    acceleration = -BRAKE;
+  }
+
+  let v1 = clamp(v0 + acceleration*dt, 0, speedLimit);
+  if(braking) v1 = Math.max(0, v0 - BRAKE*dt);
+
+  // Exact constant-acceleration displacement for this time step.
+  let distance = v0*dt + 0.5*acceleration*dt*dt;
+  distance = Math.max(0,distance);
+
+  // Do not let the simulated pod cross the destination.
+  // If this step reaches the endpoint, clamp position and stop there.
+  if(distance >= rem || rem <= 0.001) {
+    position = routeLength;
+    speed = 0;
+    braking = false;
+    running = false;
+    completed = true;
+    elapsed += dt;
+    capture();
+    event("Destination reached. Pod stopped and mission completed.");
+    render();
+    return;
+  }
+
+  position += distance;
+  speed = v1;
+  elapsed += dt;
+  accumulator += dt;
+
+  if(braking && speed <= 0.001) {
+    speed = 0;
+    running = false;
+    braking = false;
+    anomaly("BRAKE CTRL","Pod stopped before destination","WARNING",
+      "Mission paused for review. Reset or review parameters before retrying.");
+  }
+
+  while(accumulator >= SAMPLE_INTERVAL) {
+    accumulator -= SAMPLE_INTERVAL;
+    capture();
+  }
+}
+
+function frame(timestamp) {
+  if(lastFrame===null) lastFrame=timestamp;
+  const dt = Math.min((timestamp-lastFrame)/1000,0.025);
+  lastFrame=timestamp;
+
+  if(running) {
+    step(dt);
+    if(timestamp-lastRender>50) {
+      render();
+      lastRender=timestamp;
+    }
+  }
+  requestAnimationFrame(frame);
+}
+
+function start() {
+  if(running || completed || emergencyStop || sensorFault) return;
+  if(remaining()<=0) return;
+  running=true;
+  lastFrame=null;
+  event(position>0 ? "Mission resumed." : "Mission started. Pod accelerating.");
+  render();
+}
+
+function pause() {
+  if(!running) return;
+  // Freeze the simulation without zeroing velocity; resume continues
+  // from the exact paused state.
+  running=false;
+  lastFrame=null;
+  event("Mission paused by operator. Velocity and position preserved.");
+  render();
+}
+
+function reset() {
+  running=false;
+  braking=false;
+  emergencyStop=false;
+  sensorFault=false;
+  completed=false;
+  position=0;
+  speed=0;
+  elapsed=0;
+  accumulator=0;
+  lastFrame=null;
+  samples=[];
+  history=[];
+  anomalies=[];
+  events=[];
+  capture();
+  event("Simulation reset. Sensors nominal; mission ready.");
+  renderAnomalies();
+  render();
+}
+
+function applySettings() {
+  if(running) return;
+  const r=Number($("routeLengthInput").value);
+  const s=Number($("speedLimitInput").value);
+
+  if(!Number.isFinite(r)||r<100||r>100000) {
+    alert("Route length must be between 100 and 100,000 metres."); return;
+  }
+  if(!Number.isFinite(s)||s<1||s>150) {
+    alert("Speed limit must be between 1 and 150 m/s."); return;
+  }
+  routeLength=r;
+  speedLimit=s;
+  reset();
+  event("Configuration applied: route "+fmt(routeLength,0)+" m; speed limit "+fmt(speedLimit,0)+" m/s.");
+  render();
+}
+
+function fault() {
+  if(emergencyStop || sensorFault) {
+    event("Fault simulation ignored: safety lockout is already active.","warning");
+    return;
+  }
+  running=false;
+  lastFrame=null;
+  speed=0;
+  braking=false;
+  sensorFault=true;
+  emergencyStop=true;
+  anomaly("POSITION SENSOR","Sensor signal lost","CRITICAL","Emergency stop activated; reset required.");
+  capture();
+  render();
+}
+
+function injectAnomaly() {
+  if(emergencyStop || sensorFault) {
+    event("Anomaly injection blocked while safety lockout is active.","warning");
+    return;
+  }
+  anomaly("VELOCITY SENSOR","Abnormal velocity reading detected","WARNING","Reading flagged; telemetry review recommended.");
+  render();
+}
+
+function exportCSV() {
+  if(!samples.length) {
+    alert("No sensor history is available to export."); return;
+  }
+  const headers=["time_s","position_m","speed_mps","remaining_m","stopping_distance_m","sensor_health_percent","braking"];
+  const rows=samples.map(s=>[
+    s.time.toFixed(3),s.position.toFixed(3),s.speed.toFixed(3),
+    s.remaining.toFixed(3),s.stopping.toFixed(3),s.health,s.braking
+  ]);
+  const csv=[headers,...rows].map(row=>row.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(",")).join("\r\n");
+  const blob=new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url;
+  a.download="hyperloop-telemetry.csv";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+  event("Telemetry exported to hyperloop-telemetry.csv.");
+}
+
+function drawChart() {
+  const canvas=$("velocityChart");
+  const rect=canvas.getBoundingClientRect();
+  if(!rect.width||!rect.height) return;
+
+  const dpr=window.devicePixelRatio||1;
+  canvas.width=Math.round(rect.width*dpr);
+  canvas.height=Math.round(rect.height*dpr);
+  const ctx=canvas.getContext("2d");
+  if(!ctx) return;
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+
+  const w=rect.width,h=rect.height,left=42,right=12,top=15,bottom=28;
+  const cw=w-left-right,ch=h-top-bottom;
+  ctx.clearRect(0,0,w,h);
+  const maxV=Math.max(5,speedLimit*1.12);
+
+  ctx.font="10px system-ui";
+  ctx.textAlign="right";
+  ctx.textBaseline="middle";
+
+  for(let i=0;i<=4;i++) {
+    const y=top+ch*i/4;
+    ctx.strokeStyle="#243248";
+    ctx.beginPath();ctx.moveTo(left,y);ctx.lineTo(w-right,y);ctx.stroke();
+    ctx.fillStyle="#91a1b8";
+    ctx.fillText(fmt(maxV*(1-i/4),0),left-8,y);
+  }
+
+  if(history.length<2) {
+    ctx.textAlign="center";ctx.fillStyle="#91a1b8";
+    ctx.fillText("Start the mission to record velocity",left+cw/2,top+ch/2);
+    ctx.textAlign="left";ctx.fillText("Speed (m/s)",left,h-8);
+    return;
+  }
+
+  const minT=history[0].time;
+  const maxT=Math.max(minT+1,history[history.length-1].time);
+  const xAt=t=>left+(t-minT)/(maxT-minT)*cw;
+  const yAt=v=>top+ch-clamp(v/maxV,0,1)*ch;
+
+  const gradient=ctx.createLinearGradient(0,top,0,top+ch);
+  gradient.addColorStop(0,"rgba(67,229,245,.25)");
+  gradient.addColorStop(1,"rgba(67,229,245,.01)");
+
+  ctx.beginPath();
+  history.forEach((p,i)=>i?ctx.lineTo(xAt(p.time),yAt(p.speed)):ctx.moveTo(xAt(p.time),yAt(p.speed)));
+  ctx.lineTo(xAt(history[history.length-1].time),top+ch);
+  ctx.lineTo(xAt(history[0].time),top+ch);
+  ctx.closePath();ctx.fillStyle=gradient;ctx.fill();
+
+  ctx.beginPath();
+  history.forEach((p,i)=>i?ctx.lineTo(xAt(p.time),yAt(p.speed)):ctx.moveTo(xAt(p.time),yAt(p.speed)));
+  ctx.strokeStyle="#43e5f5";ctx.lineWidth=2;ctx.stroke();
+
+  ctx.setLineDash([5,4]);ctx.strokeStyle="#ffbf69";
+  ctx.beginPath();ctx.moveTo(left,yAt(speedLimit));ctx.lineTo(w-right,yAt(speedLimit));ctx.stroke();
+  ctx.setLineDash([]);
+
+  ctx.textAlign="left";ctx.fillStyle="#91a1b8";ctx.fillText("Speed (m/s)",left,h-8);
+  ctx.textAlign="right";ctx.fillStyle="#ffbf69";
+  ctx.fillText("Limit "+speedLimit,w-right,Math.max(9,yAt(speedLimit)-8));
+}
+
+$("startButton").addEventListener("click",start);
+$("pauseButton").addEventListener("click",pause);
+$("resetButton").addEventListener("click",reset);
+$("applySettingsButton").addEventListener("click",applySettings);
+$("faultButton").addEventListener("click",fault);
+$("anomalyButton").addEventListener("click",injectAnomaly);
+$("exportButton").addEventListener("click",exportCSV);
+
+$("clearSensorButton").addEventListener("click",()=>{
+  samples=[];
+  history=[];
+  accumulator=0;
+  capture();
+  event("Sensor history cleared.");
+});
+
+$("clearLogButton").addEventListener("click",()=>{
+  events=[];
+  renderEvents();
+  event("Event log cleared.");
+});
+
+window.addEventListener("resize",drawChart);
+
+capture();
+renderAnomalies();
+event("Dashboard initialized. Simulated sensors nominal.");
+event("Automatic braking controller armed.");
+render();
+requestAnimationFrame(frame);
+
+})();
+</script>
+</body>
+</html>
